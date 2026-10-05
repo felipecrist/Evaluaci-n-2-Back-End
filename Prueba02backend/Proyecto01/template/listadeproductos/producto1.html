@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos - TechStore</title>
+    <style>
+        :root{--accent:#0f62fe;--bg:#0f1720;--card:#0b1220;--muted:#9aa4b2}
+        *{box-sizing:border-box}
+        body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:linear-gradient(180deg,#07203a 0%, #071827 100%);color:#e6eef6}
+        header{background:rgba(0,0,0,0.25);backdrop-filter:blur(6px);padding:12px 20px;display:flex;align-items:center;justify-content:space-between}
+        .brand{font-weight:700;font-size:1.1rem;display:flex;gap:10px;align-items:center}
+        nav a{color:var(--accent);text-decoration:none;margin-left:14px;padding:8px 12px;border-radius:6px;background:transparent}
+        nav a:hover{background:rgba(255,255,255,0.04)}
+        .container{max-width:1100px;margin:28px auto;padding:0 20px}
+        .grid{display:grid;grid-template-columns:1fr;gap:20px}
+        .productos-wrap{display:flex;flex-wrap:wrap;gap:16px}
+        .card{background:var(--card);padding:14px;border-radius:10px;color:#e6eef6;width:260px}
+        .card.deleted{opacity:0.45;filter:blur(0.6px);}
+        .badge-eliminado{background:#c62828;color:#fff;padding:4px 8px;border-radius:6px;font-size:0.8rem;margin-left:6px}
+        .thumb img{width:100%;height:140px;object-fit:cover;border-radius:8px;margin-bottom:8px}
+        .price{color:var(--accent);font-weight:700}
+        .btn{background:var(--accent);color:white;padding:8px 12px;border-radius:8px;border:none}
+        .cart{background:rgba(255,255,255,0.02);padding:12px;border-radius:8px}
+        .admin-del{background:#c62828;color:#fff;padding:6px 8px;border-radius:6px;border:none}
+        @media(max-width:800px){.card{width:100%}}
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">TechStore <span style="font-weight:400;color:var(--muted);font-size:0.9rem;margin-left:6px">Electrónica & Tecnología</span></div>
+        <nav>
+            <a href="/">Inicio</a>
+            <a href="/productos/">Productos</a>
+            <a href="/noticias/">Noticias</a>
+            <a href="/cuenta/">Cuenta</a>
+            <a href="/contacto/">Contacto</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1>Productos destacados</h1>
+
+        {% if aviso_compra %}
+            <script>alert('{{ aviso_compra }}');</script>
+        {% endif %}
+        {% if aviso_stock %}
+            <script>alert('{{ aviso_stock }}');</script>
+        {% endif %}
+
+        {% if productos %}
+            <div class="productos-wrap">
+                {% for producto in productos %}
+                    <div class="card{% if producto.eliminado %} deleted{% endif %}">
+                        <div class="thumb"><img src="{{ producto.imagen }}" alt="{{ producto.nombre }}"></div>
+                        <h3>{{ producto.nombre }}</h3>
+                        {% if producto.eliminado and es_admin %}
+                            <div style="margin-top:6px"><span class="badge-eliminado">Marcado como eliminado</span></div>
+                        {% endif %}
+                        <div style="color:var(--muted)">{{ producto.detalle }}</div>
+                        <p style="color:var(--muted)">{{ producto.descripcion }}</p>
+                        <div class="price">${{ producto.precio|floatformat:2 }}</div>
+
+                        <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+                            <form method="post" action="">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="add">
+                                <input type="hidden" name="id_producto" value="{{ producto.id }}">
+                                <input type="number" name="cantidad" min="1" value="1" style="width:64px">
+                                <button class="btn" type="submit">Agregar</button>
+                            </form>
+
+                            {% if es_admin %}
+                                <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+                                    <div style="color:var(--muted)">Stock: {{ producto.stock }}</div>
+                                    <form method="post" action="">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="reponer_stock">
+                                        <input type="hidden" name="id_producto" value="{{ producto.id }}">
+                                        <input type="number" name="cantidad_stock" min="0" value="{{ producto.stock }}" style="width:76px">
+                                        <button class="btn" type="submit">Reponer</button>
+                                    </form>
+
+                                    <form method="post" action="">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="delete_producto">
+                                        <input type="hidden" name="id_producto" value="{{ producto.id }}">
+                                        <button class="admin-del" type="submit">Eliminar</button>
+                                    </form>
+                                </div>
+                            {% else %}
+                                <div style="margin-left:auto;color:var(--muted)">Stock: {{ producto.stock }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div style="margin-top:22px">
+                <h2>Carrito</h2>
+                <div class="cart">
+                    {% if carrito %}
+                        <ul>
+                            {% for pid, qty in carrito.items %}
+                                <li style="margin-bottom:8px;display:flex;align-items:center;gap:12px">
+                                    {% for p in productos %}
+                                        {% if p.id == pid %}
+                                            <img src="{{ p.imagen }}" alt="{{ p.nombre }}" style="width:64px;height:64px;object-fit:cover;border-radius:6px">
+                                            <div style="flex:1">
+                                                <div>{{ p.nombre }}</div>
+                                                <div style="color:var(--muted)">Cantidad: {{ qty }}</div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    <div style="display:flex;gap:8px">
+                                        <form method="post" action="">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="remove">
+                                            <input type="hidden" name="id_producto" value="{{ pid }}">
+                                            <button class="btn" type="submit">Quitar</button>
+                                        </form>
+
+                                        <form method="post" action="">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="set">
+                                            <input type="hidden" name="id_producto" value="{{ pid }}">
+                                            <input type="hidden" name="quantity" value="0">
+                                            <button style="background:#555;color:white;padding:8px;border-radius:6px;border:none">Eliminar</button>
+                                        </form>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+                            <div><strong>Total:</strong> ${{ total|floatformat:2 }}</div>
+                            {% if usuario %}
+                                <form method="post" action="">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="pagar">
+                                    <button class="btn" type="submit">Pagar</button>
+                                </form>
+                            {% else %}
+                                <a class="btn" href="/cuenta/">Iniciar sesión para pagar</a>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <p>El carrito está vacío.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+        {% else %}
+            <p>No hay productos disponibles.</p>
+        {% endif %}
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Noticias - TechStore</title>
+	<style>
+		:root{--accent:#0f62fe;--bg:#0f1720;--card:#0b1220;--muted:#9aa4b2}
+		*{box-sizing:border-box}
+		body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:linear-gradient(180deg,#07203a 0%, #071827 100%);color:#e6eef6}
+		header{background:rgba(0,0,0,0.25);backdrop-filter:blur(6px);padding:12px 20px;display:flex;align-items:center;justify-content:space-between}
+		.brand{font-weight:700;font-size:1.1rem;display:flex;gap:10px;align-items:center}
+		nav a{color:var(--accent);text-decoration:none;margin-left:14px;padding:8px 12px;border-radius:6px;background:transparent}
+		nav a:hover{background:rgba(255,255,255,0.04)}
+		.container{max-width:1100px;margin:28px auto;padding:0 20px}
+		.nota{background:linear-gradient(180deg, rgba(12,20,30,0.9), rgba(8,12,20,0.9));padding:16px;border-radius:12px;margin-bottom:16px;display:flex;gap:16px;align-items:flex-start;border:1px solid rgba(255,255,255,0.04);box-shadow:0 10px 28px rgba(2,6,23,0.55)}
+		.nota img{width:200px;height:120px;object-fit:cover;border-radius:8px}
+		.admin-btn{background:#c62828;color:#fff;padding:6px 10px;border:none;border-radius:6px}
+		.nota.deleted{opacity:0.45;filter:blur(0.6px)}
+		.badge-eliminado{background:#c62828;color:#fff;padding:4px 8px;border-radius:6px;font-size:0.85rem;margin-left:6px}
+	</style>
+</head>
+<body>
+	<header>
+		<div class="brand">TechStore <span style="font-weight:400;color:var(--muted);font-size:0.9rem;margin-left:6px">Electrónica & Tecnología</span></div>
+		<nav>
+			<a href="/">Inicio</a>
+			<a href="/productos/">Productos</a>
+			<a href="/noticias/">Noticias</a>
+			<a href="/cuenta/">Cuenta</a>
+			<a href="/contacto/">Contacto</a>
+			{% if usuario %}
+				<span style="margin-left:12px;color:var(--muted)">Hola, {{ usuario.usuario }}</span>
+				<form method="post" action="/cuenta/" style="display:inline;margin-left:8px">
+					{% csrf_token %}
+					<input type="hidden" name="action" value="logout">
+					<button class="btn" type="submit" style="padding:6px 8px">Cerrar sesión</button>
+				</form>
+			{% endif %}
+		</nav>
+	</header>
+
+	<div class="container">
+		<h1>Noticias</h1>
+
+		{% if noticias %}
+			{% for nota in noticias %}
+				<div class="nota{% if nota.eliminado %} deleted{% endif %}">
+					<img src="{{ nota.imagen }}" alt="{{ nota.titulo }}">
+					<div style="flex:1">
+						<h3>{{ nota.titulo }}</h3>
+						{% if nota.eliminado and es_admin %}
+							<div><span class="badge-eliminado">Marcada como eliminada</span></div>
+						{% endif %}
+						<div style="color:var(--muted)">{{ nota.fecha }} • Tecnología</div>
+						<div style="margin-top:8px;color:var(--muted)">
+							<p>{{ nota.extracto }}</p>
+							<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer non turpis vitae lectus convallis tincidunt. Proin a nisl vel lacus faucibus sodales. Sed vitae sem vitae risus pharetra convallis. Praesent vel lorem non arcu facilisis vulputate.</p>
+							<p>Detalles técnicos: Integer faucibus, nunc id cursus fermentum, sapien orci fermentum dui, non cursus urna lorem sed justo. Información adicional y contexto del impacto en la industria tecnológica.</p>
+						</div>
+						<div style="margin-top:8px;color:var(--muted)"><strong>Fuente:</strong> TechDaily • <strong>Autor:</strong> Equipo TechStore • <strong>Etiquetas:</strong> IA, Smartphones</div>
+						{% if es_admin %}
+							<form method="post" action="">
+								{% csrf_token %}
+								<input type="hidden" name="action" value="delete_noticia">
+								<input type="hidden" name="id_noticia" value="{{ nota.id }}">
+								<button class="admin-btn" type="submit">Eliminar noticia</button>
+							</form>
+						{% endif %}
+					</div>
+				</div>
+			{% endfor %}
+
+			<!-- Noticias adicionales (sólo en plantilla) -->
+			<div class="nota">
+				<img src="/static/images/news4.jpg" alt="Computación cuántica">
+				<div style="flex:1">
+					<h3>Avances en computación cuántica acercan rendimiento práctico</h3>
+					<div style="color:var(--muted)">02 Sep 2026 • Investigación</div>
+					<div style="margin-top:8px;color:var(--muted)">
+						<p>Investigadores presentan nuevos algoritmos y correcciones de errores que reducen la sobrecarga en qubits. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae.</p>
+						<p>Impacto: mejora en simulaciones moleculares y optimización combinatoria que puede acelerar el desarrollo de nuevos materiales y fármacos. Detalles técnicos: se logra una reducción del error efectivo mediante técnicas híbridas de control y aprendizaje.</p>
+					</div>
+					<div style="margin-top:8px;color:var(--muted)"><strong>Fuente:</strong> QuantumNews • <strong>Autor:</strong> Dr. A. Pérez • <strong>Etiquetas:</strong> Computación, Investigación</div>
+				</div>
+			</div>
+
+			<div class="nota">
+				<img src="/static/images/news5.jpg" alt="Ciberseguridad">
+				<div style="flex:1">
+					<h3>Nuevas prácticas de ciberseguridad para IoT doméstico</h3>
+					<div style="color:var(--muted)">29 Ago 2026 • Seguridad</div>
+					<div style="margin-top:8px;color:var(--muted)">
+						<p>Grupos de trabajo internacionales publican guías para fortalecer la autenticación y el ciclo de actualizaciones OTA. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer sit amet semper risus.</p>
+						<p>Consejos prácticos: segmentación de redes domésticas, autenticación mutua, y uso de hardware seguro para claves. Estas medidas reducen vectores de ataque y ayudan a proteger dispositivos conectados.</p>
+					</div>
+					<div style="margin-top:8px;color:var(--muted)"><strong>Fuente:</strong> SecureHome • <strong>Autor:</strong> Equipo SecureHome • <strong>Etiquetas:</strong> Ciberseguridad, IoT</div>
+				</div>
+			</div>
+		{% else %}
+			<p>No hay noticias disponibles.</p>
+		{% endif %}
+
+	</div>
+</body>
+</html>

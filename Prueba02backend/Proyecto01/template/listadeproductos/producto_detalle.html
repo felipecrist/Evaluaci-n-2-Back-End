@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle - TechStore</title>
+    <style>
+        :root{--accent:#0f62fe;--bg:#0f1720;--card:#0b1220;--muted:#9aa4b2}
+        *{box-sizing:border-box}
+        body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:linear-gradient(180deg,#07203a 0%, #071827 100%);color:#e6eef6}
+        header{background:rgba(0,0,0,0.25);backdrop-filter:blur(6px);padding:12px 20px;display:flex;align-items:center;justify-content:space-between}
+        .brand{font-weight:700;font-size:1.1rem;display:flex;gap:10px;align-items:center}
+        nav a{color:var(--accent);text-decoration:none;margin-left:14px;padding:8px 12px;border-radius:6px;background:transparent}
+        nav a:hover{background:rgba(255,255,255,0.04)}
+        .container{max-width:1100px;margin:28px auto;padding:0 20px}
+        .detail{display:grid;grid-template-columns:1fr 360px;gap:20px}
+        .gallery img{width:100%;height:260px;object-fit:cover;border-radius:8px;margin-bottom:8px}
+        .thumbs{display:flex;gap:8px}
+        .thumbs img{width:100px;height:80px;object-fit:cover;border-radius:6px}
+        .price{color:var(--accent);font-weight:700;font-size:1.2rem}
+        .btn{background:var(--accent);color:white;padding:8px 12px;border-radius:8px;border:none}
+        .cart{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 6px 18px rgba(2,6,23,0.5)}
+        @media(max-width:900px){.detail{grid-template-columns:1fr} .gallery img{height:200px}}
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">TechStore <span style="font-weight:400;color:var(--muted);font-size:0.9rem;margin-left:6px">Electrónica & Tecnología</span></div>
+        <nav>
+            <a href="/">Inicio</a>
+            <a href="/productos/">Productos</a>
+            <a href="/noticias/">Noticias</a>
+            <a href="/cuenta/">Cuenta</a>
+            <a href="/contacto/">Contacto</a>
+            {% if usuario %}
+                <span style="margin-left:12px;color:var(--muted)">Hola, {{ usuario.usuario }}</span>
+                <form method="post" action="/cuenta/" style="display:inline;margin-left:8px">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="logout">
+                    <button class="btn" type="submit" style="padding:6px 8px">Cerrar sesión</button>
+                </form>
+            {% endif %}
+        </nav>
+    </header>
+
+    <div class="container">
+        <a href="/productos/" style="color:var(--muted);text-decoration:none">← Volver a productos</a>
+        <h1>{{ producto.nombre }}</h1>
+
+        {% if aviso_compra %}
+            <script>alert('{{ aviso_compra }}');</script>
+        {% endif %}
+        {% if aviso_stock %}
+            <script>alert('{{ aviso_stock }}');</script>
+        {% endif %}
+
+        <div class="detail">
+            <div>
+                <div class="gallery">
+                    <!-- Ejemplo con la misma imagen repetida -->
+                    <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}">
+                    <div class="thumbs">
+                        <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}">
+                        <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}">
+                        <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}">
+                    </div>
+                </div>
+
+                <div style="margin-top:14px;color:var(--muted)">{{ producto.detalle }}</div>
+                <p style="color:var(--muted)">{{ producto.descripcion }}</p>
+                <div style="margin-top:12px;background:rgba(255,255,255,0.02);padding:12px;border-radius:8px">
+                    <h4 style="margin:0 0 8px 0">Descripción completa</h4>
+                    <p style="margin:0 0 8px 0;color:var(--muted)">Modelo: <strong>{{ producto.nombre }}</strong></p>
+                    <p style="margin:0 0 8px 0;color:var(--muted)">Resumen: {{ producto.detalle }} — {{ producto.descripcion }}</p>
+                    <ul style="margin:0 0 8px 18px;color:var(--muted)">
+                        <li>Especificaciones técnicas clave: procesador y optimizaciones (según el modelo).</li>
+                        <li>Conectividad: Bluetooth, Wi‑Fi, puertos y compatibilidad de códecs.</li>
+                        <li>Batería: duración estimada en uso típico y tiempo de carga.</li>
+                        <li>Incluye: accesorios, cables y manual de usuario.</li>
+                        <li>Garantía: 2 años (según condiciones del vendedor).</li>
+                    </ul>
+                    <p style="margin:8px 0 0 0;color:var(--muted)">Precio: <strong>${{ producto.precio|floatformat:2 }}</strong> — Stock actual: <strong>{{ producto.stock }}</strong></p>
+                </div>
+            </div>
+
+            <aside>
+                <div style="background:linear-gradient(180deg, rgba(11,18,32,0.95), rgba(8,12,20,0.9));padding:14px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);box-shadow:0 8px 20px rgba(2,6,23,0.55)">
+                    <div class="price">${{ producto.precio|floatformat:2 }}</div>
+                    <div style="color:var(--muted);margin-top:8px">Stock: {{ producto.stock }}</div>
+
+                    <form method="post" action="/productos/" style="margin-top:12px">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="add">
+                        <input type="hidden" name="id_producto" value="{{ producto.id }}">
+                        <input type="number" name="cantidad" min="1" value="1" style="width:76px">
+                        <div style="margin-top:10px">
+                            <button class="btn" type="submit">Agregar al carrito</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div style="margin-top:18px">
+                    <h3>Carrito</h3>
+                    <div id="cart-container" class="cart">
+                        {% if carrito %}
+                            <ul>
+                                {% for pid, qty in carrito.items %}
+                                    <li style="margin-bottom:8px;display:flex;align-items:center;gap:12px">
+                                        {% for p in productos %}
+                                            {% if p.id == pid %}
+                                                <img src="{{ p.imagen }}" alt="{{ p.nombre }}" style="width:64px;height:64px;object-fit:cover;border-radius:6px">
+                                                <div style="flex:1">
+                                                    <div>{{ p.nombre }}</div>
+                                                    <div style="color:var(--muted)">Cantidad: {{ qty }}</div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+
+                                        <div style="display:flex;gap:8px">
+                                            <form method="post" action="/productos/">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="remove">
+                                                <input type="hidden" name="id_producto" value="{{ pid }}">
+                                                <button class="btn" type="submit">Quitar</button>
+                                            </form>
+
+                                            <form method="post" action="/productos/">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="set">
+                                                <input type="hidden" name="id_producto" value="{{ pid }}">
+                                                <input type="hidden" name="quantity" value="0">
+                                                <button style="background:#555;color:white;padding:8px;border-radius:6px;border:none">Eliminar</button>
+                                            </form>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+                                <div><strong>Total:</strong> ${{ total|floatformat:2 }}</div>
+                                {% if usuario %}
+                                    <form class="cart-action" method="post" action="/productos/" data-action="pagar">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="pagar">
+                                        <button class="btn" type="submit">Pagar</button>
+                                    </form>
+                                {% else %}
+                                    <a class="btn" href="/cuenta/">Iniciar sesión para pagar</a>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <p>El carrito está vacío.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+    </div>
+</body>
+    <script src="/static/js/carrito.js"></script>
+</html>
